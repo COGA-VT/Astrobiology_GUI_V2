@@ -788,95 +788,95 @@ if 'data_file_data' in st.session_state:
                 #End Regression Metrics Code -----------------------------------------------------------------------------------
 
                 #Begin Feature Importance Code -----------------------------------------------------------------------
-                with st.expander('Feature Importance (SHAP)'):
-                    shap.initjs()
-                    if 'shap_values' not in st.session_state:
-                        st.session_state['shap_values'] = None
-                        st.session_state['class_count'] = 0
+                # with st.expander('Feature Importance (SHAP)'):
+                #     shap.initjs()
+                #     if 'shap_values' not in st.session_state:
+                #         st.session_state['shap_values'] = None
+                #         st.session_state['class_count'] = 0
 
-                    if st.button('Generate SHAP Plots'):
-                        try:
-                            check_is_fitted(selected_model)
+                #     if st.button('Generate SHAP Plots'):
+                #         try:
+                #             check_is_fitted(selected_model)
 
-                            if hasattr(selected_model, "predict_proba"):
-                                predict_fn = lambda x: selected_model.predict_proba(x)
-                            else:
-                                predict_fn = lambda x: selected_model.predict(x)
+                #             if hasattr(selected_model, "predict_proba"):
+                #                 predict_fn = lambda x: selected_model.predict_proba(x)
+                #             else:
+                #                 predict_fn = lambda x: selected_model.predict(x)
 
-                            with st.spinner("Generating SHAP values..."):
-                                model_type = type(selected_model)
-                                test_sample = X_test[:50] if len(X_test) > 50 else X_test
+                #             with st.spinner("Generating SHAP values..."):
+                #                 model_type = type(selected_model)
+                #                 test_sample = X_test[:50] if len(X_test) > 50 else X_test
 
-                                if isinstance(X_train, np.ndarray):
-                                    X_train = pd.DataFrame(X_train,
-                                                           columns=[f'PC{i + 1}' for i in range(X_train.shape[1])],
-                                                           index=st.session_state['X_train_index'])
-                                    X_test = pd.DataFrame(X_test,
-                                                          columns=[f'PC{i + 1}' for i in range(X_test.shape[1])],
-                                                          index=st.session_state['X_test_index'])
+                #                 if isinstance(X_train, np.ndarray):
+                #                     X_train = pd.DataFrame(X_train,
+                #                                            columns=[f'PC{i + 1}' for i in range(X_train.shape[1])],
+                #                                            index=st.session_state['X_train_index'])
+                #                     X_test = pd.DataFrame(X_test,
+                #                                           columns=[f'PC{i + 1}' for i in range(X_test.shape[1])],
+                #                                           index=st.session_state['X_test_index'])
 
-                                background_data = X_train.sample(n=min(100, len(X_train)), random_state=42)
+                #                 background_data = X_train.sample(n=min(100, len(X_train)), random_state=42)
 
-                                if model_type in [RandomForestClassifier, RandomForestRegressor,
-                                                  HistGradientBoostingRegressor]:
-                                    explainer = shap.TreeExplainer(selected_model)
-                                elif model_type in [Ridge, LogisticRegression]:
-                                    explainer = shap.LinearExplainer(selected_model, X_train)
-                                elif model_type in [svm.SVC, svm.SVR, KNeighborsClassifier]:
-                                    explainer = shap.KernelExplainer(predict_fn, background_data)
-                                else:
-                                    explainer = shap.Explainer(predict_fn, X_train)
+                #                 if model_type in [RandomForestClassifier, RandomForestRegressor,
+                #                                   HistGradientBoostingRegressor]:
+                #                     explainer = shap.TreeExplainer(selected_model)
+                #                 elif model_type in [Ridge, LogisticRegression]:
+                #                     explainer = shap.LinearExplainer(selected_model, X_train)
+                #                 elif model_type in [svm.SVC, svm.SVR, KNeighborsClassifier]:
+                #                     explainer = shap.KernelExplainer(predict_fn, background_data)
+                #                 else:
+                #                     explainer = shap.Explainer(predict_fn, X_train)
 
-                                shap_vals = explainer(test_sample)
+                #                 shap_vals = explainer(test_sample)
 
-                                # Save results to session state
-                                st.session_state['shap_values'] = shap_vals
+                #                 # Save results to session state
+                #                 st.session_state['shap_values'] = shap_vals
 
-                                if isinstance(shap_vals, list):
-                                    st.session_state['class_count'] = len(shap_vals)
-                                elif hasattr(shap_vals, "values") and shap_vals.values.ndim == 3:
-                                    st.session_state['class_count'] = shap_vals.values.shape[2]
-                                else:
-                                    st.session_state['class_count'] = 0
+                #                 if isinstance(shap_vals, list):
+                #                     st.session_state['class_count'] = len(shap_vals)
+                #                 elif hasattr(shap_vals, "values") and shap_vals.values.ndim == 3:
+                #                     st.session_state['class_count'] = shap_vals.values.shape[2]
+                #                 else:
+                #                     st.session_state['class_count'] = 0
 
-                        except NotFittedError:
-                            st.error("Model is not fitted. SHAP explanations cannot be generated.")
-                        except Exception as e:
-                            st.error(f"SHAP explanation failed: {e}")
+                #         except NotFittedError:
+                #             st.error("Model is not fitted. SHAP explanations cannot be generated.")
+                #         except Exception as e:
+                #             st.error(f"SHAP explanation failed: {e}")
 
-                    # Now outside the button, show the class selector if shap_values exist and multiple classes
-                    if st.session_state['shap_values'] is not None:
-                        shap_values = st.session_state['shap_values']
+                #     # Now outside the button, show the class selector if shap_values exist and multiple classes
+                #     if st.session_state['shap_values'] is not None:
+                #         shap_values = st.session_state['shap_values']
 
-                        if st.session_state['class_count'] > 1:
-                            class_idx = st.selectbox("Select class index for SHAP plots:",
-                                                     options=list(range(st.session_state['class_count'])),
-                                                     key='shap_class_idx')
-                        else:
-                            class_idx = 0
+                #         if st.session_state['class_count'] > 1:
+                #             class_idx = st.selectbox("Select class index for SHAP plots:",
+                #                                      options=list(range(st.session_state['class_count'])),
+                #                                      key='shap_class_idx')
+                #         else:
+                #             class_idx = 0
 
-                        # Select correct shap_values to plot
-                        if isinstance(shap_values, list):
-                            shap_values_to_plot = shap_values[class_idx]
-                        elif hasattr(shap_values, "values") and shap_values.values.ndim == 3:
-                            shap_values_to_plot = shap.Explanation(
-                                values=shap_values.values[:, :, class_idx],
-                                base_values=shap_values.base_values[:, class_idx],
-                                data=shap_values.data,
-                                feature_names=shap_values.feature_names
-                            )
-                        else:
-                            shap_values_to_plot = shap_values
+                #         # Select correct shap_values to plot
+                #         if isinstance(shap_values, list):
+                #             shap_values_to_plot = shap_values[class_idx]
+                #         elif hasattr(shap_values, "values") and shap_values.values.ndim == 3:
+                #             shap_values_to_plot = shap.Explanation(
+                #                 values=shap_values.values[:, :, class_idx],
+                #                 base_values=shap_values.base_values[:, class_idx],
+                #                 data=shap_values.data,
+                #                 feature_names=shap_values.feature_names
+                #             )
+                #         else:
+                #             shap_values_to_plot = shap_values
 
-                        st.subheader("SHAP Summary Plot")
-                        fig_summary, ax_summary = plt.subplots()
-                        shap.plots.beeswarm(shap_values_to_plot, show=False)
-                        st.pyplot(fig_summary)
+                #         st.subheader("SHAP Summary Plot")
+                #         fig_summary, ax_summary = plt.subplots()
+                #         shap.plots.beeswarm(shap_values_to_plot, show=False)
+                #         st.pyplot(fig_summary)
 
-                        st.subheader("SHAP Bar Plot (Feature Importance)")
-                        fig_bar, ax_bar = plt.subplots()
-                        shap.plots.bar(shap_values_to_plot, show=False)
-                        st.pyplot(fig_bar)
+                #         st.subheader("SHAP Bar Plot (Feature Importance)")
+                #         fig_bar, ax_bar = plt.subplots()
+                #         shap.plots.bar(shap_values_to_plot, show=False)
+                #         st.pyplot(fig_bar)
                 #End Feature Importance Code -------------------------------------------------------------------------
 
             # End Model Metrics Code -------------------------------------------------------------------------------------------
