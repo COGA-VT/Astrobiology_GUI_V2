@@ -48,8 +48,12 @@ if 'data_file_data' in st.session_state:
         with col1:
 
             options_sup = st.selectbox(label='Select Prediction Type',
-                                       options=['Classification',
-                                                'Regression'])
+                                        options=['Classification',
+                                                'Regression'],
+                                        help="Classification and regression are the most common types of supervised learning. Classification " \
+                                        "seeks to predict separate categories while regression predicts continuous values. Read more about clasification " \
+                                        "and regression [here.](https://www.ibm.com/think/topics/classification-vs-regression)"
+                                        )
 
             st.divider()
 
@@ -478,7 +482,11 @@ if 'data_file_data' in st.session_state:
 
 
 
-                model_choice = st.selectbox('Choose Classification Algorithm', list(model_display_names.keys()))
+                model_choice = st.selectbox('Choose Classification Algorithm', 
+                                            list(model_display_names.keys()),
+                                            help="Choosing an ML model is heavily reliant on the structure of your data. Each model " \
+                                            "has its own strengths and weaknesses and provides different use cases. " \
+                                            "Read more about model selection [here.](https://www.ibm.com/think/topics/model-selection)")
                 selected_model = model_display_names[model_choice]()
 
 
@@ -527,7 +535,8 @@ if 'data_file_data' in st.session_state:
                     st.stop()
 
 
-                if st.session_state.get("target_is_number", True):
+                if options_sup == "Regression":
+                #st.session_state.get("target_is_number", True):
                     metrics = {
                             'MSE' : mean_squared_error(y_test, y_pred),
                             'RMSE' : root_mean_squared_error(y_test, y_pred),
@@ -537,7 +546,7 @@ if 'data_file_data' in st.session_state:
 
                     display_cols = list(metrics.keys())
                     is_regression = True
-                else:
+                elif options_sup == "Classification":
                     metrics = {
                         'Accuracy': accuracy_score(y_test, y_pred),
                         'F1': f1_score(y_test, y_pred, average='weighted'),
